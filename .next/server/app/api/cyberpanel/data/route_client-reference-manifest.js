@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/cyberpanel/data/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"E:\\Control Panel\\src\\":[],"E:\\Control Panel\\src\\app\\api\\cyberpanel\\data\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}}

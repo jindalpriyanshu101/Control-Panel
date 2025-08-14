@@ -3,7 +3,8 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 
 declare module 'next-auth' {
   interface User {
-    role: string
+    role?: string
+    websites?: string[]
   }
   
   interface Session {
@@ -11,14 +12,16 @@ declare module 'next-auth' {
       id: string
       email: string
       name: string
-      role: string
+      role?: string
+      websites?: string[]
     }
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    role: string
+    role?: string
+    websites?: string[]
   }
 }
 

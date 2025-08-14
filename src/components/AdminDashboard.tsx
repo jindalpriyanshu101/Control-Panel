@@ -101,19 +101,49 @@ export default function AdminDashboard({ user }: { user: User }) {
 
   const loadCyberPanelData = async () => {
     setIsLoading(true)
-    info('Loading Data', 'Fetching latest data from CyberPanel...')
+    info('Loading Data', 'Fetching your CyberPanel data...')
     
     try {
-      const response = await fetch('/api/cyberpanel/data')
+      // Use the new user-specific data endpoint that filters based on session
+      const response = await fetch('/api/cyberpanel/user-data')
       const data = await response.json()
 
-      if (data.success) {
-        setStats(data.data.stats)
-        setWebsites(data.data.websites)
-        setUsers(data.data.users)
-        success('Data Loaded', `Successfully loaded ${data.data.websites.length} websites from CyberPanel`)
+      if (response.ok && !data.error) {
+        // Map the new response format to the existing state structure
+        const mappedStats = {
+          totalUsers: 1, // Current user count
+          totalWebsites: data.stats.totalWebsites,
+          activeWebsites: data.stats.activeWebsites,
+          suspendedWebsites: data.stats.totalWebsites - data.stats.activeWebsites,
+          totalStorage: parseInt(data.stats.totalDiskUsage.replace(/[^\d]/g, '') || '0'),
+          totalBandwidth: 0, // Not available in current API
+          totalPackages: data.stats.availablePackages
+        }
+
+        const mappedUsers = [{
+          id: data.user.username,
+          username: data.user.username,
+          name: data.user.username,
+          email: user.email || 'admin@cyberpanel.local',
+          role: data.user.role,
+          websites: data.websites.map((w: any) => w.domain),
+          websiteCount: data.user.websiteCount,
+          lastLogin: new Date().toISOString(),
+          created: new Date().toISOString()
+        }]
+
+        setStats(mappedStats)
+        setWebsites(data.websites)
+        setUsers(mappedUsers)
+        
+        success('Data Loaded', `Successfully loaded ${data.websites.length} websites for ${data.user.username}`)
+        console.log('✅ User-specific data loaded:', {
+          user: data.user,
+          websites: data.websites.length,
+          packages: data.packages.length
+        })
       } else {
-        error('Load Failed', data.error || 'Failed to load CyberPanel data')
+        error('Load Failed', data.error || 'Failed to load your CyberPanel data')
       }
     } catch (err) {
       error('Connection Error', 'Failed to connect to CyberPanel API')

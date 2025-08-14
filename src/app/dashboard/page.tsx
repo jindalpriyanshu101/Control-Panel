@@ -29,11 +29,15 @@ export default function Dashboard() {
     return null
   }
 
-  // Check if user is admin
-  const isAdmin = session.user?.email === 'admin@cyberpanel.local' || 
-                  session.user?.email === 'admin@elementix.com' ||
-                  // You can add role checking here when you implement it in your user model
-                  true // For now, always show admin dashboard
+  // Check if user is admin based on session role
+  const isAdmin = session.user?.role === 'admin'
+  
+  console.log('🔍 Dashboard user session:', {
+    name: session.user?.name,
+    email: session.user?.email,
+    role: session.user?.role,
+    isAdmin
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900">
