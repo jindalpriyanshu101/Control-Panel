@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  accounts     Account[]
+  sessions     Session[]
+  websites     Website[]
+  activities   Activity[]
+  
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model Website {
+  id          String        @id @default(cuid())
+  domain      String        @unique
+  userId      String        @map("user_id")
+  status      WebsiteStatus @default(PENDING)
+  package     String        @default("Basic")
+  sslEnabled  Boolean       @default(false)
+  phpVersion  String        @default("8.1")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // CyberPanel specific fields
+  cyberpanelId String?      @map("cyberpanel_id")
+  ipAddress    String?      @map("ip_address")
+  
+  // Resource usage
+  storageUsed    Int       @default(0) // in MB
+  storageLimit   Int       @default(1024) // in MB
+  bandwidthUsed  Int       @default(0) // in MB this month
+  bandwidthLimit Int       @default(10240) // in MB per month
+  visitorsCount  Int       @default(0) // this month
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  databases Database[]
+  emailAccounts EmailAccount[]
+  
+  @@map("websites")
+}
+
+model Database {
+  id         String   @id @default(cuid())
+  name       String
+  type       String   @default("MySQL") // MySQL, PostgreSQL
+  username   String
+  websiteId  String   @map("website_id")
+  createdAt  DateTime @default(now())
+  
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  
+  @@unique([name, websiteId])
+  @@map("databases")
+}
+
+model EmailAccount {
+  id        String   @id @default(cuid())
+  email     String
+  websiteId String   @map("website_id")
+  createdAt DateTime @default(now())
+  
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  
+  @@unique([email, websiteId])
+  @@map("email_accounts")
+}
+
+model SystemStats {
+  id              String   @id @default(cuid())
+  totalUsers      Int      @default(0)
+  totalWebsites   Int      @default(0)
+  activeWebsites  Int      @default(0)
+  totalStorage    Int      @default(0) // in GB
+  usedStorage     Int      @default(0) // in GB
+  bandwidthUsed   Int      @default(0) // in GB this month
+  lastUpdated     DateTime @default(now())
+  
+  @@map("system_stats")
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  userId      String       @map("user_id")
+  action      String
+  description String
+  metadata    Json?
+  type        ActivityType @default(USER_ACTION)
+  createdAt   DateTime     @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("activities")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum WebsiteStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum ActivityType {
+  USER_ACTION
+  SYSTEM_ACTION
+  WEBSITE_ACTION
+  ADMIN_ACTION
+}
